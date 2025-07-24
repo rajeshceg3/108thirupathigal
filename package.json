@@ -1,19 +1,7 @@
-{
-  "name": "project",
-  "version": "1.0.0",
-  "description": "108thirupathigal",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "leaflet": "^1.9.4",
-    "lucide-react": "^0.525.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-leaflet": "^5.0.0"
-  }
-}
+@@ .. @@
+   "scripts": {
+-    "test": "echo \"Error: no test specified\" && exit 1"
++    "dev": "vite",
++    "build": "tsc && vite build",
++    "preview": "vite preview"
+   },
