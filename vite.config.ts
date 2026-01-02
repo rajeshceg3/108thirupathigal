@@ -15,6 +15,12 @@ export default defineConfig({
         },
       },
     },
+    modulePreload: {
+      // ⚡ Bolt Optimization: Disable module preload polyfill
+      // Modern browsers support module preloading natively.
+      // Removing this polyfill saves ~2kB of bundle size and improves initial load time.
+      polyfill: false,
+    },
   },
   test: {
     environment: 'jsdom',
