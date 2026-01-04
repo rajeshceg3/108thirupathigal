@@ -1,4 +1,4 @@
-import { useState, memo, useCallback } from 'react';
+import { useState, memo, useCallback, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Search } from 'lucide-react';
@@ -57,9 +57,23 @@ function App() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredLocations = locations.filter(loc =>
+  // Optimization: Memoize filtered locations to prevent re-computation on other state changes (like selection)
+  const filteredLocations = useMemo(() => locations.filter(loc =>
     loc.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ), [searchTerm]);
+
+  // Optimization: Memoize markers to prevent re-rendering all markers when only selection changes
+  const markers = useMemo(() => filteredLocations.map(loc => (
+    <Marker
+      key={loc.id}
+      position={[loc.lat, loc.lng]}
+    >
+      <Popup>
+        <h3>{loc.name}</h3>
+        <p>{loc.description}</p>
+      </Popup>
+    </Marker>
+  )), [filteredLocations]);
 
   const handleSelect = useCallback((id: number) => {
     setSelectedId(id);
@@ -97,17 +111,7 @@ function App() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
-          {filteredLocations.map(loc => (
-            <Marker
-              key={loc.id}
-              position={[loc.lat, loc.lng]}
-            >
-              <Popup>
-                <h3>{loc.name}</h3>
-                <p>{loc.description}</p>
-              </Popup>
-            </Marker>
-          ))}
+          {markers}
         </MapContainer>
       </div>
     </div>
