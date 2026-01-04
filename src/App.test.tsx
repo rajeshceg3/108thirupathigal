@@ -10,8 +10,7 @@ describe('App', () => {
 
   it('renders list items', () => {
     render(<App />)
-    // We updated the data generation, so "Thirupathi 1" might be "Thirupathi 6" now because of the base locations.
-    // Let's check for one of the base locations.
-    expect(screen.getByText('Srirangam')).toBeInTheDocument()
+    // Updated test to match the full name in the locations data
+    expect(screen.getByText('Ranganathaswamy Temple, Srirangam')).toBeInTheDocument()
   })
 })
