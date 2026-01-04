@@ -5,15 +5,13 @@ import App from './App'
 describe('App', () => {
   it('renders search input', () => {
     render(<App />)
-    expect(screen.getByPlaceholderText('Search...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Search locations...')).toBeInTheDocument()
   })
 
-  it('renders map container', () => {
-    // We can't easily test the map canvas rendering in JSDOM without mocking Leaflet,
-    // but we can check if the container renders or specific markers if accessible.
-    // For now, let's just check if the list items are rendered.
+  it('renders list items', () => {
     render(<App />)
-    // There are 108 items, let's check for one.
-    expect(screen.getByText('Thirupathi 1')).toBeInTheDocument()
+    // We updated the data generation, so "Thirupathi 1" might be "Thirupathi 6" now because of the base locations.
+    // Let's check for one of the base locations.
+    expect(screen.getByText('Srirangam')).toBeInTheDocument()
   })
 })
