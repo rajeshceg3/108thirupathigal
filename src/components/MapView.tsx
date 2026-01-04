@@ -48,7 +48,7 @@ export const MapView = ({ locations, selectedId, onSelect }: MapViewProps) => {
         center={[11, 79]}
         zoom={6}
         className="w-full h-full"
-        zoomControl={false} // We can add custom zoom control later or let standard stay, false helps clean UI
+        zoomControl={false}
       >
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
@@ -62,10 +62,31 @@ export const MapView = ({ locations, selectedId, onSelect }: MapViewProps) => {
               click: () => onSelect(loc.id),
             }}
           >
-            <Popup className="custom-popup">
-              <div className="p-1">
-                <h3 className="font-semibold text-slate-900">{loc.name}</h3>
-                <p className="text-xs text-slate-500 mt-1">{loc.description}</p>
+            <Popup className="custom-popup" minWidth={200} closeButton={false}>
+              <div className="p-0 overflow-hidden rounded-lg">
+                {loc.image && (
+                    <div className="h-24 w-full overflow-hidden bg-slate-100 relative">
+                        <img
+                          src={loc.image}
+                          alt={loc.name}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                        <h3 className="absolute bottom-2 left-2 right-2 font-bold text-white text-sm leading-tight drop-shadow-md">
+                          {loc.name}
+                        </h3>
+                    </div>
+                )}
+                {!loc.image && (
+                   <div className="p-3 pb-0">
+                      <h3 className="font-bold text-sm text-slate-900 leading-tight">{loc.name}</h3>
+                   </div>
+                )}
+                <div className="p-3 pt-2">
+                    <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                      {loc.description}
+                    </p>
+                </div>
               </div>
             </Popup>
           </Marker>
