@@ -8,30 +8,32 @@ interface SearchBarProps {
 
 export const SearchBar = ({ value, onChange, className = '' }: SearchBarProps) => {
   return (
-    <div className={`relative ${className}`}>
-      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <Search size={16} className="text-slate-400" />
+    <div className={`relative group ${className}`}>
+      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+        <Search size={18} className="text-slate-400 group-focus-within:text-brand-500 transition-colors duration-200" />
       </div>
       <input
         type="text"
-        placeholder="Search locations..."
+        placeholder="Search 108 Divya Desams..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="
-          block w-full pl-10 pr-10 py-2.5
-          bg-white border border-slate-200
+          block w-full pl-11 pr-10 py-3
+          bg-slate-50 border border-slate-200
           rounded-xl
-          text-sm text-slate-900 placeholder-slate-400
-          focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500
-          transition-all duration-200 shadow-sm hover:shadow
+          text-sm font-medium text-slate-800 placeholder-slate-400
+          focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500
+          transition-all duration-200 shadow-sm
         "
       />
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
         >
-          <X size={16} />
+          <div className="bg-slate-200 rounded-full p-0.5 hover:bg-slate-300 transition-colors">
+            <X size={14} />
+          </div>
         </button>
       )}
     </div>
