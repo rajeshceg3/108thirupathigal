@@ -5,7 +5,7 @@ import App from './App'
 describe('App', () => {
   it('renders search input', () => {
     render(<App />)
-    expect(screen.getByPlaceholderText('Search locations...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Search 108 Divya Desams...')).toBeInTheDocument()
   })
 
   it('renders list items', () => {
