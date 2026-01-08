@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, isConfigured } from '../lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { LogIn, LogOut, User } from 'lucide-react';
+import { LogIn, LogOut, User, AlertCircle } from 'lucide-react';
 
 export const Login = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -26,14 +27,34 @@ export const Login = () => {
   }, []);
 
   const handleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.message || 'Failed to login');
+    }
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
+
+  if (!isConfigured) {
+    return (
+      <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-lg border border-amber-200 text-sm font-medium">
+        <AlertCircle size={16} />
+        <span>Auth not configured</span>
+      </div>
+    );
+  }
 
   if (loading) {
       return <div className="text-slate-400 text-xs">Loading auth...</div>;
@@ -41,13 +62,18 @@ export const Login = () => {
 
   if (!session) {
     return (
-      <button
-        onClick={handleLogin}
-        className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-semibold shadow-sm"
-      >
-        <LogIn size={16} />
-        Login with Google
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          onClick={handleLogin}
+          className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-semibold shadow-sm"
+        >
+          <LogIn size={16} />
+          Login with Google
+        </button>
+        {error && (
+          <p className="text-xs text-red-600">{error}</p>
+        )}
+      </div>
     );
   }
 
