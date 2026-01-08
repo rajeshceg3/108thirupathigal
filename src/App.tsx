@@ -3,12 +3,15 @@ import { locations } from './data/locations';
 import { LocationCard } from './components/LocationCard';
 import { SearchBar } from './components/SearchBar';
 import { MapView } from './components/MapView';
+import { Login } from './components/Login';
+import { useVisitedLocations } from './hooks/useVisitedLocations';
 import { Map as MapIcon, List as ListIcon } from 'lucide-react';
 
 function App() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('map');
+  const { visitedIds, toggleVisited, session } = useVisitedLocations();
 
   const filteredLocations = useMemo(() =>
     locations.filter(loc =>
@@ -48,6 +51,9 @@ function App() {
                  </p>
             </div>
           </div>
+          <div className="mb-4">
+            <Login />
+          </div>
           <SearchBar value={searchTerm} onChange={setSearchTerm} className="shadow-sm" />
         </div>
 
@@ -57,9 +63,16 @@ function App() {
              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                 Destinations
              </span>
-             <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full border border-slate-200/50">
-                {filteredLocations.length} Found
-             </span>
+             <div className="flex gap-2">
+               {session && (
+                 <span className="text-[10px] font-bold bg-brand-50 text-brand-600 px-2.5 py-1 rounded-full border border-brand-200/50">
+                    {visitedIds.length} Visited
+                 </span>
+               )}
+               <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full border border-slate-200/50">
+                  {filteredLocations.length} Found
+               </span>
+             </div>
           </div>
 
           <div className="space-y-3 pb-24 md:pb-4">
@@ -69,6 +82,9 @@ function App() {
                   loc={loc}
                   isSelected={selectedId === loc.id}
                   onSelect={handleSelect}
+                  isVisited={visitedIds.includes(loc.id)}
+                  onToggleVisited={toggleVisited}
+                  showVisitedToggle={!!session}
                 />
               ))}
           </div>

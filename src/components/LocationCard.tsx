@@ -1,14 +1,17 @@
 import { memo } from 'react';
 import { Location } from '../data/locations';
-import { ChevronRight, MapPin } from 'lucide-react';
+import { ChevronRight, MapPin, CheckCircle2 } from 'lucide-react';
 
 interface LocationCardProps {
   loc: Location;
   isSelected: boolean;
   onSelect: (id: number) => void;
+  isVisited?: boolean;
+  onToggleVisited?: (id: number) => void;
+  showVisitedToggle?: boolean;
 }
 
-export const LocationCard = memo(({ loc, isSelected, onSelect }: LocationCardProps) => {
+export const LocationCard = memo(({ loc, isSelected, onSelect, isVisited, onToggleVisited, showVisitedToggle }: LocationCardProps) => {
   return (
     <div
       onClick={() => onSelect(loc.id)}
@@ -48,17 +51,34 @@ export const LocationCard = memo(({ loc, isSelected, onSelect }: LocationCardPro
 
         {/* Content */}
         <div className="flex-1 min-w-0 flex flex-col justify-between h-20 py-0.5">
-          <div>
-            <h3 className={`
-              text-[15px] font-bold truncate leading-tight mb-1 tracking-tight
-              ${isSelected ? 'text-brand-700' : 'text-slate-800 group-hover:text-brand-600'}
-              transition-colors
-            `}>
-              {loc.name}
-            </h3>
-            <p className="text-[13px] text-slate-500 line-clamp-2 leading-relaxed font-medium">
-              {loc.description}
-            </p>
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0">
+              <h3 className={`
+                text-[15px] font-bold truncate leading-tight mb-1 tracking-tight
+                ${isSelected ? 'text-brand-700' : 'text-slate-800 group-hover:text-brand-600'}
+                transition-colors
+              `}>
+                {loc.name}
+              </h3>
+              <p className="text-[13px] text-slate-500 line-clamp-2 leading-relaxed font-medium">
+                {loc.description}
+              </p>
+            </div>
+            {showVisitedToggle && onToggleVisited && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleVisited(loc.id);
+                    }}
+                    className={`
+                        flex-shrink-0 transition-all duration-300 p-1 rounded-full
+                        ${isVisited ? 'text-green-500 bg-green-50' : 'text-slate-200 hover:text-slate-400 hover:bg-slate-50'}
+                    `}
+                    title={isVisited ? "Mark as unvisited" : "Mark as visited"}
+                >
+                    <CheckCircle2 size={20} className={isVisited ? "fill-current" : ""} />
+                </button>
+            )}
           </div>
 
           <div className="flex items-center justify-between mt-auto pt-1">
