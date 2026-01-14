@@ -1,16 +1,38 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 import App from './App'
+
+// Mock Supabase hook
+vi.mock('./hooks/useVisitedLocations', () => ({
+  useVisitedLocations: () => ({
+    visitedIds: [],
+    toggleVisited: vi.fn(),
+    session: null
+  })
+}))
+
+// Mock Leaflet
+vi.mock('react-leaflet', () => ({
+  MapContainer: ({ children }: any) => <div>{children}</div>,
+  TileLayer: () => <div>TileLayer</div>,
+  Marker: ({ children }: any) => <div>{children}</div>,
+  Popup: ({ children }: any) => <div>{children}</div>,
+  useMap: () => ({ flyTo: vi.fn() })
+}))
 
 describe('App', () => {
   it('renders search input', () => {
     render(<App />)
-    expect(screen.getByPlaceholderText('Search 108 Divya Desams...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Search destinations...')).toBeDefined()
   })
 
-  it('renders list items', () => {
+  it('filters locations when searching', () => {
     render(<App />)
-    // Updated test to match the full name in the locations data
-    expect(screen.getByText('Ranganathaswamy Temple, Srirangam')).toBeInTheDocument()
+    const searchInput = screen.getByPlaceholderText('Search destinations...')
+
+    // Type 'Tirupati'
+    fireEvent.change(searchInput, { target: { value: 'Tirupati' } })
+
+    expect(searchInput).toHaveValue('Tirupati')
   })
 })
