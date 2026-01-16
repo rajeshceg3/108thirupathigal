@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MapPin, ArrowRight } from 'lucide-react';
+import { SafeImage } from './SafeImage';
 
 // Custom Marker Component - "World Class" 3D Pin Style
 const CustomMarkerIcon = ({ isSelected }: { isSelected: boolean }) => (
@@ -73,7 +74,8 @@ interface MapViewProps {
 const MapUpdater = ({ center }: { center: [number, number] | null }) => {
   const map = useMap();
   useEffect(() => {
-    if (center) {
+    // If center is null or [0,0] (celestial), don't fly
+    if (center && (center[0] !== 0 || center[1] !== 0)) {
       map.flyTo(center, 14, { // Optimal zoom for context
         animate: true,
         duration: 2, // Slower, more cinematic pan
@@ -90,8 +92,32 @@ export const MapView = ({ locations, selectedId, onSelect }: MapViewProps) => {
     ? [selectedLocation.lat, selectedLocation.lng]
     : null;
 
+  // Check for Celestial Location (lat/lng 0,0)
+  const isCelestial = center && center[0] === 0 && center[1] === 0;
+
   return (
     <div className="w-full h-full relative z-0 bg-slate-100">
+      {/* Celestial Overlay */}
+      {isCelestial && selectedLocation && (
+        <div className="absolute inset-0 z-[500] flex items-center justify-center pointer-events-none">
+          <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-sm mx-4 text-center border border-white/20 ring-1 ring-black/5 pointer-events-auto transform transition-all duration-500 animate-in fade-in zoom-in-95">
+             <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <div className="w-2 h-2 bg-brand-500 rounded-full animate-ping absolute"></div>
+                <div className="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center text-white relative z-10">
+                   <span className="text-xs font-bold">★</span>
+                </div>
+             </div>
+             <h2 className="text-xl font-bold text-slate-900 mb-2">{selectedLocation.name}</h2>
+             <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                This divine abode resides in the celestial realm, beyond the physical coordinates of Earth.
+             </p>
+             <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full text-xs font-bold text-slate-600 uppercase tracking-wider">
+                Celestial Domain
+             </div>
+          </div>
+        </div>
+      )}
+
       <MapContainer
         center={[11, 79]}
         zoom={7}
@@ -119,7 +145,7 @@ export const MapView = ({ locations, selectedId, onSelect }: MapViewProps) => {
                   <div className="flex flex-col group cursor-pointer" onClick={() => onSelect(loc.id)}>
                     {loc.image && (
                         <div className="h-40 w-full relative overflow-hidden bg-slate-100">
-                            <img
+                            <SafeImage
                               src={loc.image}
                               alt={loc.name}
                               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"

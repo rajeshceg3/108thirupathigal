@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Location } from '../data/locations';
 import { ChevronRight, MapPin, CheckCircle2 } from 'lucide-react';
+import { SafeImage } from './SafeImage';
 
 interface LocationCardProps {
   loc: Location;
@@ -35,7 +36,7 @@ export const LocationCard = memo(({ loc, isSelected, onSelect, isVisited, onTogg
             ${isSelected ? 'shadow-lg' : 'group-hover:shadow-lg'}
         `}>
           {loc.image ? (
-            <img
+            <SafeImage
               src={loc.image}
               alt={loc.name}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ease-stripe"
