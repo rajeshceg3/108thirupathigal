@@ -30,6 +30,7 @@ export const SearchBar = ({ value, onChange, className = '' }: SearchBarProps) =
       <input
         ref={inputRef}
         type="text"
+        aria-label="Search destinations"
         placeholder="Search destinations..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -49,6 +50,7 @@ export const SearchBar = ({ value, onChange, className = '' }: SearchBarProps) =
         {value ? (
           <button
             onClick={() => onChange('')}
+            aria-label="Clear search"
             className="text-slate-300 hover:text-slate-500 transition-colors p-1 rounded-full hover:bg-slate-100"
           >
             <X size={14} strokeWidth={2.5} />
