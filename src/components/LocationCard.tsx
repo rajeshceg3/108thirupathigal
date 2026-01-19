@@ -15,7 +15,16 @@ interface LocationCardProps {
 export const LocationCard = memo(({ loc, isSelected, onSelect, isVisited, onToggleVisited, showVisitedToggle }: LocationCardProps) => {
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Select ${loc.name}`}
       onClick={() => onSelect(loc.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(loc.id);
+        }
+      }}
       className={`
         group relative p-4 rounded-2xl transition-all duration-500 ease-stripe cursor-pointer
         ${isSelected
@@ -70,6 +79,7 @@ export const LocationCard = memo(({ loc, isSelected, onSelect, isVisited, onTogg
                         e.stopPropagation();
                         onToggleVisited(loc.id);
                     }}
+                    aria-label={isVisited ? `Mark ${loc.name} as unvisited` : `Mark ${loc.name} as visited`}
                     className={`
                         flex-shrink-0 transition-all duration-300 p-1.5 rounded-full
                         ${isVisited
