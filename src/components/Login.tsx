@@ -33,9 +33,10 @@ export const Login = () => {
         provider: 'google',
       });
       if (error) throw error;
-    } catch (err: any) {
+    } catch (err) {
       console.error('Login error:', err);
-      setError(err.message || 'Failed to login');
+      const message = err instanceof Error ? err.message : 'Failed to login';
+      setError(message);
     }
   };
 

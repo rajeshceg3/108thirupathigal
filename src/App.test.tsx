@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { PropsWithChildren } from 'react'
 import App from './App'
 
 // Mock Supabase hook
@@ -13,10 +14,10 @@ vi.mock('./hooks/useVisitedLocations', () => ({
 
 // Mock Leaflet
 vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children }: any) => <div>{children}</div>,
+  MapContainer: ({ children }: PropsWithChildren) => <div>{children}</div>,
   TileLayer: () => <div>TileLayer</div>,
-  Marker: ({ children }: any) => <div>{children}</div>,
-  Popup: ({ children }: any) => <div>{children}</div>,
+  Marker: ({ children }: PropsWithChildren) => <div>{children}</div>,
+  Popup: ({ children }: PropsWithChildren) => <div>{children}</div>,
   useMap: () => ({ flyTo: vi.fn() })
 }))
 
