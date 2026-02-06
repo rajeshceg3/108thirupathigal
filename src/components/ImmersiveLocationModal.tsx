@@ -161,7 +161,7 @@ export const ImmersiveLocationModal = ({ location, onClose, onSelect, allLocatio
                                  navigator.share({
                                      title: location.name,
                                      text: location.description,
-                                     url: `${window.location.origin}?location=${location.id}`
+                                     url: window.location.href
                                  }).catch(console.error);
                              } else {
                                  navigator.clipboard.writeText(`${window.location.origin}?location=${location.id}`);
