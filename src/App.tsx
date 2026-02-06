@@ -3,12 +3,14 @@ import { locations } from './data/locations';
 import { LocationCard } from './components/LocationCard';
 import { SearchBar } from './components/SearchBar';
 import { MapView } from './components/MapView';
+import { ImmersiveLocationModal } from './components/ImmersiveLocationModal';
 import { Login } from './components/Login';
 import { useVisitedLocations } from './hooks/useVisitedLocations';
 import { Map as MapIcon, List as ListIcon, Search } from 'lucide-react';
 
 function App() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('map');
   const { visitedIds, toggleVisited, session } = useVisitedLocations();
@@ -21,13 +23,32 @@ function App() {
 
   const handleSelect = useCallback((id: number) => {
     setSelectedId(id);
+    // Auto-open modal for Celestial locations (since they have no map marker to click)
+    const loc = locations.find(l => l.id === id);
+    if (loc && loc.lat === 0 && loc.lng === 0) {
+      setIsModalOpen(true);
+    }
+
     if (window.innerWidth < 768) {
       setViewMode('map');
     }
   }, []);
 
+  const handleMapSelect = useCallback((id: number) => {
+    setSelectedId(id);
+    setIsModalOpen(true);
+  }, []);
+
   return (
     <div className="flex h-[100dvh] w-full bg-slate-50 overflow-hidden relative font-sans selection:bg-brand-500 selection:text-white">
+      {isModalOpen && (
+        <ImmersiveLocationModal
+          location={locations.find(l => l.id === selectedId) || null}
+          onClose={() => setIsModalOpen(false)}
+          onSelect={handleMapSelect}
+          allLocations={locations}
+        />
+      )}
 
       {/* Sidebar */}
       <div className={`
@@ -106,7 +127,7 @@ function App() {
         <MapView
           locations={filteredLocations}
           selectedId={selectedId}
-          onSelect={handleSelect}
+          onSelect={handleMapSelect}
         />
 
         {/* Mobile View Toggle - Refined Floating Pill */}
