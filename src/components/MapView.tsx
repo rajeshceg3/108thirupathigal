@@ -11,13 +11,13 @@ const CustomMarkerIcon = ({ isSelected }: { isSelected: boolean }) => (
   <div className={`
     relative flex items-center justify-center
     transition-all duration-500 ease-bounce-subtle
-    ${isSelected ? 'scale-110 z-50' : 'scale-100 hover:scale-105 hover:-translate-y-1'}
+    ${isSelected ? 'scale-125 z-50' : 'scale-100 hover:scale-110 hover:-translate-y-1'}
   `}>
     {/* Pin Head */}
     <div className={`
         relative flex items-center justify-center w-10 h-10 rounded-full
         ${isSelected
-            ? 'bg-gradient-to-b from-brand-500 to-brand-600 shadow-[0_10px_20px_-5px_rgba(99,102,241,0.5)]'
+            ? 'bg-gradient-to-b from-brand-400 to-brand-500 shadow-[0_10px_20px_-5px_rgba(139,92,246,0.5)]'
             : 'bg-white shadow-[0_4px_10px_-2px_rgba(0,0,0,0.1)]'}
         border-[3px] border-white
         transition-all duration-300
@@ -25,7 +25,7 @@ const CustomMarkerIcon = ({ isSelected }: { isSelected: boolean }) => (
         <MapPin
             size={isSelected ? 20 : 18}
             className={`
-                ${isSelected ? 'text-white' : 'text-brand-600'}
+                ${isSelected ? 'text-white' : 'text-brand-500'}
                 transition-colors duration-300 drop-shadow-sm
             `}
             strokeWidth={2.5}
@@ -39,7 +39,7 @@ const CustomMarkerIcon = ({ isSelected }: { isSelected: boolean }) => (
         border-l-[6px] border-l-transparent
         border-r-[6px] border-r-transparent
         border-t-[8px]
-        ${isSelected ? 'border-t-brand-600' : 'border-t-white'}
+        ${isSelected ? 'border-t-brand-500' : 'border-t-white'}
         transition-colors duration-300
     `}></div>
 
@@ -47,7 +47,7 @@ const CustomMarkerIcon = ({ isSelected }: { isSelected: boolean }) => (
     <div className={`
          absolute -bottom-4 w-8 h-2 bg-black/20 blur-[3px] rounded-[100%]
          transition-all duration-300
-         ${isSelected ? 'scale-75 opacity-40' : 'scale-50 opacity-20 group-hover:scale-75 group-hover:opacity-30'}
+         ${isSelected ? 'scale-90 opacity-40' : 'scale-50 opacity-20 group-hover:scale-75 group-hover:opacity-30'}
     `}></div>
 
   </div>
@@ -77,8 +77,8 @@ const MapUpdater = ({ center }: { center: [number, number] | null }) => {
     if (center && (center[0] !== 0 || center[1] !== 0)) {
       map.flyTo(center, 14, { // Optimal zoom for context
         animate: true,
-        duration: 2, // Slower, more cinematic pan
-        easeLinearity: 0.25
+        duration: 2.5, // Slower, more cinematic pan
+        easeLinearity: 0.1
       });
     }
   }, [center, map]);
