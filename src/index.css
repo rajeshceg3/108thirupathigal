@@ -17,8 +17,8 @@
 }
 
 ::selection {
-  background-color: #6366f1; /* brand-500 */
-  color: white;
+  background-color: #c4b5fd; /* brand-300 */
+  color: #2e1065; /* brand-950 */
 }
 
 body {
@@ -27,8 +27,13 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  /* Subtle mesh gradient background for depth */
-  background: radial-gradient(circle at 50% 0%, #f1f5f9 0%, #f8fafc 100%);
+  /* Pastel Mesh Gradient */
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(at 0% 0%, #f5f3ff 0, transparent 50%),
+    radial-gradient(at 50% 100%, #eff6ff 0, transparent 50%),
+    radial-gradient(at 100% 0%, #fff1f2 0, transparent 50%);
+  background-attachment: fixed;
 }
 
 #root {
@@ -36,7 +41,7 @@ body {
   height: 100vh;
 }
 
-/* Custom Scrollbar for the sidebar - Thinner, MacOS style */
+/* Custom Scrollbar - Thinner, Pastel Style */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -47,12 +52,23 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(148, 163, 184, 0.4);
+  background-color: #e2e8f0; /* slate-200 */
   border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(148, 163, 184, 0.7);
+  background-color: #cbd5e1; /* slate-300 */
+}
+
+/* For the sidebar specifically, we can override */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 .leaflet-container {
@@ -63,23 +79,25 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-/* Map Tile Filter - Slightly desaturate to make UI pop */
+/* Map Tile Filter - Slightly warm/pastel tint */
 .leaflet-tile {
-    filter: saturate(0.85) contrast(0.95);
+    filter: saturate(0.9) brightness(1.02);
 }
 
 /* Leaflet Popup Polish */
 .leaflet-popup-content-wrapper {
   padding: 0;
-  border-radius: 16px;
-  box-shadow: 0 50px 100px -20px rgba(50, 50, 93, 0.25), 0 30px 60px -30px rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1), 0 10px 20px -5px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .leaflet-popup-content {
   margin: 0 !important;
-  width: 280px !important;
+  width: 300px !important;
 }
 
 .leaflet-popup-tip-container {
@@ -87,29 +105,49 @@ body {
 }
 
 .leaflet-popup-tip {
-  box-shadow: 0 13px 27px -5px rgba(50, 50, 93, 0.25);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .leaflet-container a.leaflet-popup-close-button {
   top: 12px;
   right: 12px;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-  font-size: 16px;
-  width: 24px;
-  height: 24px;
+  color: #64748b;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.8);
   backdrop-filter: blur(4px);
-  transition: all 0.2s ease;
-  border: 1px solid rgba(255,255,255,0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  font-weight: 300;
 }
 
 .leaflet-container a.leaflet-popup-close-button:hover {
-  color: white;
-  background: rgba(0,0,0,0.5);
-  transform: scale(1.1);
+  color: #ef4444;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: scale(1.1) rotate(90deg);
+}
+
+/* Leaflet Attribution Polish */
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(4px);
+  padding: 4px 10px !important;
+  border-radius: 20px;
+  margin-right: 10px !important;
+  margin-bottom: 10px !important;
+  font-size: 10px !important;
+  color: #64748b !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.leaflet-control-attribution a {
+  color: #8b5cf6 !important; /* brand-500 */
+  text-decoration: none;
+  font-weight: 600;
 }

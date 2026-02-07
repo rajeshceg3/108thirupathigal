@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { locations } from './data/locations';
 import { LocationCard } from './components/LocationCard';
 import { SearchBar } from './components/SearchBar';
@@ -6,7 +6,8 @@ import { MapView } from './components/MapView';
 import { ImmersiveLocationModal } from './components/ImmersiveLocationModal';
 import { Login } from './components/Login';
 import { useVisitedLocations } from './hooks/useVisitedLocations';
-import { Map as MapIcon, List as ListIcon, Search } from 'lucide-react';
+import { Map as MapIcon, List as ListIcon, Search, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function App() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -14,6 +15,13 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('map');
   const { visitedIds, toggleVisited, session } = useVisitedLocations();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const filteredLocations = useMemo(() =>
     locations.filter(loc =>
@@ -29,10 +37,10 @@ function App() {
       setIsModalOpen(true);
     }
 
-    if (window.innerWidth < 768) {
+    if (isMobile) {
       setViewMode('map');
     }
-  }, []);
+  }, [isMobile]);
 
   const handleMapSelect = useCallback((id: number) => {
     setSelectedId(id);
@@ -40,35 +48,47 @@ function App() {
   }, []);
 
   return (
-    <div className="flex h-[100dvh] w-full bg-slate-50 overflow-hidden relative font-sans selection:bg-brand-500 selection:text-white">
-      {isModalOpen && (
-        <ImmersiveLocationModal
-          location={locations.find(l => l.id === selectedId) || null}
-          onClose={() => setIsModalOpen(false)}
-          onSelect={handleMapSelect}
-          allLocations={locations}
-        />
-      )}
+    <div className="flex h-[100dvh] w-full bg-slate-50 overflow-hidden relative font-sans selection:bg-brand-200 selection:text-brand-900">
+      <AnimatePresence>
+        {isModalOpen && (
+            <ImmersiveLocationModal
+            key="modal"
+            location={locations.find(l => l.id === selectedId) || null}
+            onClose={() => setIsModalOpen(false)}
+            onSelect={handleMapSelect}
+            allLocations={locations}
+            />
+        )}
+      </AnimatePresence>
 
       {/* Sidebar */}
-      <div className={`
-        absolute inset-0 z-30 md:static md:z-0
-        flex flex-col w-full md:w-[420px] lg:w-[460px]
-        bg-white/80 backdrop-blur-xl border-r border-slate-200/50 shadow-2xl md:shadow-xl
-        transition-transform duration-500 cubic-bezier(0.2, 0.8, 0.2, 1)
-        ${viewMode === 'list' ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}>
-
+      <motion.div
+        initial={false}
+        animate={{ x: isMobile && viewMode === 'map' ? '-100%' : '0%' }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={`
+            absolute inset-0 z-30 md:static md:z-0
+            flex flex-col w-full md:w-[420px] lg:w-[460px]
+            bg-white/80 backdrop-blur-xl border-r border-slate-200/50 shadow-2xl md:shadow-xl
+        `}
+      >
         {/* Header */}
         <div className="px-6 py-6 border-b border-slate-100/50 bg-white/50 backdrop-blur-md z-10 sticky top-0">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-1.5 h-8 bg-gradient-to-b from-brand-500 to-brand-600 rounded-full shadow-lg shadow-brand-500/30"></div>
+            <div className="relative">
+                <div className="w-1.5 h-8 bg-gradient-to-b from-brand-500 to-brand-400 rounded-full shadow-[0_0_15px_rgba(139,92,246,0.5)]"></div>
+                <motion.div
+                    animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.2, 1] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                    className="absolute -top-1 -left-1 w-3.5 h-10 bg-brand-400/20 blur-md rounded-full"
+                />
+            </div>
             <div>
-                 <h1 className="text-xl font-extrabold text-slate-900 tracking-tightest leading-none">
+                 <h1 className="text-xl font-extrabold text-slate-900 tracking-tightest leading-none flex items-center gap-2">
                     108 Thirupathigal
                  </h1>
-                 <p className="text-[13px] font-medium text-slate-500 mt-1 tracking-wide">
-                    Divya Desam Pilgrimage
+                 <p className="text-[13px] font-medium text-slate-500 mt-1 tracking-wide flex items-center gap-1">
+                    <Sparkles size={10} className="text-brand-400" /> Divya Desam Pilgrimage
                  </p>
             </div>
           </div>
@@ -79,14 +99,14 @@ function App() {
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 scrollbar-hide bg-slate-50/50">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 scrollbar-hide bg-slate-50/50 relative">
           <div className="flex items-center justify-between px-2 mb-4 mt-2">
              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                 Destinations
              </span>
              <div className="flex gap-2">
                {session && (
-                 <span className="text-[10px] font-bold bg-brand-50 text-brand-600 px-2.5 py-1 rounded-full border border-brand-200/50 shadow-sm">
+                 <span className="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full border border-emerald-100 shadow-sm">
                     {visitedIds.length} Visited
                  </span>
                )}
@@ -97,30 +117,36 @@ function App() {
           </div>
 
           <div className="space-y-3 pb-24 md:pb-4">
-              {filteredLocations.map(loc => (
-                <LocationCard
-                  key={loc.id}
-                  loc={loc}
-                  isSelected={selectedId === loc.id}
-                  onSelect={handleSelect}
-                  isVisited={visitedIds.includes(loc.id)}
-                  onToggleVisited={toggleVisited}
-                  showVisitedToggle={!!session}
-                />
-              ))}
+              <AnimatePresence mode="popLayout">
+                  {filteredLocations.map(loc => (
+                    <LocationCard
+                      key={loc.id}
+                      loc={loc}
+                      isSelected={selectedId === loc.id}
+                      onSelect={handleSelect}
+                      isVisited={visitedIds.includes(loc.id)}
+                      onToggleVisited={toggleVisited}
+                      showVisitedToggle={!!session}
+                    />
+                  ))}
+              </AnimatePresence>
           </div>
 
           {filteredLocations.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-20 text-slate-400"
+            >
                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 text-slate-300 shadow-card">
                   <Search size={28} />
                </div>
                <p className="font-bold text-slate-600">No locations found</p>
                <p className="text-xs mt-1 text-slate-400">Try adjusting your search</p>
-            </div>
+            </motion.div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Content (Map) */}
       <div className="flex-1 relative h-full w-full bg-slate-100">
@@ -132,7 +158,12 @@ function App() {
 
         {/* Mobile View Toggle - Refined Floating Pill */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[1000] md:hidden w-auto perspective-1000">
-          <div className="bg-slate-900/90 backdrop-blur-xl p-1.5 rounded-full shadow-float flex items-center gap-1 border border-white/10 ring-1 ring-black/20">
+          <motion.div
+             initial={{ y: 50, opacity: 0 }}
+             animate={{ y: 0, opacity: 1 }}
+             transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+             className="bg-slate-900/90 backdrop-blur-xl p-1.5 rounded-full shadow-float flex items-center gap-1 border border-white/10 ring-1 ring-black/20"
+          >
             <button
               onClick={() => setViewMode('list')}
               className={`
@@ -157,7 +188,7 @@ function App() {
               <MapIcon size={16} strokeWidth={2.5} />
               Map
             </button>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

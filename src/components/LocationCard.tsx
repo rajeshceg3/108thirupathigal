@@ -1,7 +1,8 @@
-import { memo } from 'react';
+import { memo, forwardRef } from 'react';
 import { Location } from '../data/locations';
 import { ChevronRight, MapPin, CheckCircle2 } from 'lucide-react';
 import { SafeImage } from './SafeImage';
+import { motion } from 'framer-motion';
 
 interface LocationCardProps {
   loc: Location;
@@ -12,9 +13,16 @@ interface LocationCardProps {
   showVisitedToggle?: boolean;
 }
 
-export const LocationCard = memo(({ loc, isSelected, onSelect, isVisited, onToggleVisited, showVisitedToggle }: LocationCardProps) => {
+const LocationCardComponent = forwardRef<HTMLDivElement, LocationCardProps>(({ loc, isSelected, onSelect, isVisited, onToggleVisited, showVisitedToggle }, ref) => {
   return (
-    <div
+    <motion.div
+      ref={ref}
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      whileHover={{ scale: 1.02, y: -2 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
       role="button"
       tabIndex={0}
       aria-label={`Select ${loc.name}`}
@@ -26,15 +34,18 @@ export const LocationCard = memo(({ loc, isSelected, onSelect, isVisited, onTogg
         }
       }}
       className={`
-        group relative p-4 rounded-2xl transition-all duration-500 ease-stripe cursor-pointer
+        group relative p-4 rounded-2xl cursor-pointer mb-3 transition-colors duration-300
         ${isSelected
-          ? 'bg-white shadow-highlight z-10 scale-[1.02]'
-          : 'bg-white shadow-card hover:shadow-card-hover hover:-translate-y-1'}
+          ? 'bg-white shadow-highlight z-10 border border-brand-200'
+          : 'bg-white shadow-card border border-transparent hover:shadow-card-hover hover:border-brand-100/50'}
       `}
     >
-      {/* Selection indicator line - Refined */}
+      {/* Selection indicator line */}
       {isSelected && (
-        <div className="absolute left-0 top-6 bottom-6 w-1 bg-brand-500 rounded-r-full shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+        <motion.div
+            layoutId="selection-indicator"
+            className="absolute left-0 top-6 bottom-6 w-1 bg-brand-500 rounded-r-full shadow-[0_0_15px_rgba(139,92,246,0.6)]"
+        />
       )}
 
       <div className="flex items-start gap-4">
@@ -42,7 +53,7 @@ export const LocationCard = memo(({ loc, isSelected, onSelect, isVisited, onTogg
         <div className={`
             relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100
             ring-1 ring-black/5 transition-all duration-500
-            ${isSelected ? 'shadow-lg' : 'group-hover:shadow-lg'}
+            ${isSelected ? 'shadow-lg ring-brand-100' : 'group-hover:shadow-lg'}
         `}>
           {loc.image ? (
             <SafeImage
@@ -74,22 +85,23 @@ export const LocationCard = memo(({ loc, isSelected, onSelect, isVisited, onTogg
               </p>
             </div>
             {showVisitedToggle && onToggleVisited && (
-                <button
+                <motion.button
+                    whileTap={{ scale: 0.8 }}
                     onClick={(e) => {
                         e.stopPropagation();
                         onToggleVisited(loc.id);
                     }}
                     aria-label={isVisited ? `Mark ${loc.name} as unvisited` : `Mark ${loc.name} as visited`}
                     className={`
-                        flex-shrink-0 transition-all duration-300 p-1.5 rounded-full
+                        flex-shrink-0 p-1.5 rounded-full transition-colors duration-300
                         ${isVisited
-                            ? 'text-green-500 bg-green-50 ring-1 ring-green-500/20'
+                            ? 'text-emerald-500 bg-emerald-50 ring-1 ring-emerald-500/20'
                             : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'}
                     `}
                     title={isVisited ? "Mark as unvisited" : "Mark as visited"}
                 >
                     <CheckCircle2 size={18} className={`transition-transform duration-300 ${isVisited ? "fill-current scale-110" : ""}`} />
-                </button>
+                </motion.button>
             )}
           </div>
 
@@ -111,6 +123,9 @@ export const LocationCard = memo(({ loc, isSelected, onSelect, isVisited, onTogg
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 });
+
+LocationCardComponent.displayName = 'LocationCard';
+export const LocationCard = memo(LocationCardComponent);
