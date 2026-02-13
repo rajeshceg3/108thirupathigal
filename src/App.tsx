@@ -5,8 +5,9 @@ import { SearchBar } from './components/SearchBar';
 import { MapView } from './components/MapView';
 import { ImmersiveLocationModal } from './components/ImmersiveLocationModal';
 import { Login } from './components/Login';
+import { GuidedTour, TourStep } from './components/GuidedTour';
 import { useVisitedLocations } from './hooks/useVisitedLocations';
-import { Map as MapIcon, List as ListIcon, Search, Sparkles } from 'lucide-react';
+import { Map as MapIcon, List as ListIcon, Search, Sparkles, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function App() {
@@ -16,6 +17,10 @@ function App() {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('map');
   const { visitedIds, toggleVisited, session } = useVisitedLocations();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Tour State
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -28,6 +33,71 @@ function App() {
       loc.name.toLowerCase().includes(searchTerm.toLowerCase())
     ), [searchTerm]
   );
+
+  const tourSteps: TourStep[] = useMemo(() => {
+    const steps: TourStep[] = [
+      {
+        title: "Welcome to 108 Thirupathigal",
+        content: "Embark on a spiritual journey through the 108 Divya Desams. This interactive guide will help you navigate the features of this application.",
+        targetId: "",
+        placement: "center"
+      },
+      {
+        title: "Your Spiritual Passport",
+        content: "Login to track your visited temples and sync your pilgrimage progress across all your devices.",
+        targetId: "tour-login",
+        placement: "bottom"
+      },
+      {
+        title: "Find Any Temple",
+        content: "Search for Divya Desams by name, deity, or location. Try typing 'Tirupati' or 'Srirangam'.",
+        targetId: "tour-search",
+        placement: "bottom"
+      },
+      {
+        title: "Track Your Journey",
+        content: "Monitor your pilgrimage progress here. See how many of the 108 Divya Desams you have visited.",
+        targetId: "tour-list-stats",
+        placement: "bottom"
+      },
+      {
+        title: "Interactive Map",
+        content: "Explore the geographical locations of all temples. Click on any marker to view detailed information.",
+        targetId: "tour-map",
+        placement: "center"
+      }
+    ];
+
+    if (isMobile) {
+        steps.push({
+            title: "Switch Views",
+            content: "Toggle between the List view and Map view on mobile devices for a seamless experience.",
+            targetId: "tour-mobile-toggle",
+            placement: "top"
+        });
+    }
+
+    return steps;
+  }, [isMobile]);
+
+  const handleTourStepChange = (step: number) => {
+    setTourStep(step);
+    const targetId = tourSteps[step]?.targetId;
+
+    if (isMobile) {
+        if (targetId === 'tour-map') {
+            setViewMode('map');
+        } else if (targetId === 'tour-search' || targetId === 'tour-login' || targetId === 'tour-list-stats') {
+            setViewMode('list');
+        }
+    }
+  };
+
+  const startTour = () => {
+    setTourStep(0);
+    setIsTourOpen(true);
+    if (isMobile) setViewMode('list');
+  };
 
   const handleSelect = useCallback((id: number) => {
     setSelectedId(id);
@@ -61,6 +131,14 @@ function App() {
         )}
       </AnimatePresence>
 
+      <GuidedTour
+        steps={tourSteps}
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        currentStep={tourStep}
+        onStepChange={handleTourStepChange}
+      />
+
       {/* Sidebar */}
       <motion.div
         initial={false}
@@ -73,7 +151,7 @@ function App() {
         `}
       >
         {/* Header */}
-        <div className="px-6 py-6 border-b border-slate-100/50 bg-white/50 backdrop-blur-md z-10 sticky top-0">
+        <div className="px-6 py-6 border-b border-slate-100/50 bg-white/50 backdrop-blur-md z-10 sticky top-0" id="tour-header">
           <div className="flex items-center gap-4 mb-6">
             <div className="relative">
                 <div className="w-1.5 h-8 bg-gradient-to-b from-brand-500 to-brand-400 rounded-full shadow-[0_0_15px_rgba(139,92,246,0.5)]"></div>
@@ -91,16 +169,29 @@ function App() {
                     <Sparkles size={10} className="text-brand-400" /> Divya Desam Pilgrimage
                  </p>
             </div>
+            <button
+                onClick={startTour}
+                className="ml-auto p-2 text-slate-400 hover:text-brand-500 hover:bg-brand-50 rounded-full transition-colors"
+                title="Start Guided Tour"
+                aria-label="Start Guided Tour"
+             >
+                <HelpCircle size={20} />
+             </button>
           </div>
-          <div className="mb-5">
+          <div className="mb-5" id="tour-login">
             <Login />
           </div>
-          <SearchBar value={searchTerm} onChange={setSearchTerm} className="shadow-sm" />
+          <SearchBar
+            id="tour-search"
+            value={searchTerm}
+            onChange={setSearchTerm}
+            className="shadow-sm"
+          />
         </div>
 
         {/* List */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 scrollbar-hide bg-slate-50/50 relative">
-          <div className="flex items-center justify-between px-2 mb-4 mt-2">
+          <div className="flex items-center justify-between px-2 mb-4 mt-2" id="tour-list-stats">
              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                 Destinations
              </span>
@@ -149,7 +240,7 @@ function App() {
       </motion.div>
 
       {/* Main Content (Map) */}
-      <div className="flex-1 relative h-full w-full bg-slate-100">
+      <div className="flex-1 relative h-full w-full bg-slate-100" id="tour-map">
         <MapView
           locations={filteredLocations}
           selectedId={selectedId}
@@ -157,7 +248,10 @@ function App() {
         />
 
         {/* Mobile View Toggle - Refined Floating Pill */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[1000] md:hidden w-auto perspective-1000">
+        <div
+            id="tour-mobile-toggle"
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[1000] md:hidden w-auto perspective-1000"
+        >
           <motion.div
              initial={{ y: 50, opacity: 0 }}
              animate={{ y: 0, opacity: 1 }}
