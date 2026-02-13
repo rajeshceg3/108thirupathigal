@@ -6,9 +6,10 @@ interface SearchBarProps {
   value: string;
   onChange: (val: string) => void;
   className?: string;
+  id?: string;
 }
 
-export const SearchBar = ({ value, onChange, className = '' }: SearchBarProps) => {
+export const SearchBar = ({ value, onChange, className = '', id }: SearchBarProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -26,6 +27,7 @@ export const SearchBar = ({ value, onChange, className = '' }: SearchBarProps) =
 
   return (
     <motion.div
+        id={id}
         className={`relative group ${className}`}
         animate={isFocused ? { scale: 1.02 } : { scale: 1 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
