@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, CSSProperties } from 'react';
+import { useEffect, useState, useCallback, useMemo, CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
@@ -8,6 +8,7 @@ export interface TourStep {
   title: string;
   content: string;
   placement?: 'top' | 'bottom' | 'left' | 'right' | 'center';
+  requiredView?: 'list' | 'map';
 }
 
 interface GuidedTourProps {
@@ -18,12 +19,25 @@ interface GuidedTourProps {
   onStepChange: (step: number) => void;
 }
 
+// Simple debounce helper
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function debounce<T extends (...args: any[]) => void>(func: T, wait: number): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+  return function(...args: Parameters<T>) {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      func(...args);
+    }, wait);
+  };
+}
+
 export const GuidedTour = ({ steps, isOpen, onClose, currentStep, onStepChange }: GuidedTourProps) => {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
 
   // Helper to get rect
   const updateRect = useCallback(() => {
     if (!isOpen) return;
+    if (!steps || steps.length === 0) return;
     const step = steps[currentStep];
     if (!step) return;
 
@@ -42,23 +56,26 @@ export const GuidedTour = ({ steps, isOpen, onClose, currentStep, onStepChange }
     }
   }, [isOpen, currentStep, steps]);
 
+  // Debounced update for resize/scroll
+  const debouncedUpdateRect = useMemo(() => debounce(updateRect, 100), [updateRect]);
+
   // Update rect on step change or resize
   useEffect(() => {
-    updateRect();
-    window.addEventListener('resize', updateRect);
-    window.addEventListener('scroll', updateRect, true); // Capture scroll events too
+    updateRect(); // Immediate update on mount/change
+    window.addEventListener('resize', debouncedUpdateRect);
+    window.addEventListener('scroll', debouncedUpdateRect, true); // Capture scroll events too
     return () => {
-      window.removeEventListener('resize', updateRect);
-      window.removeEventListener('scroll', updateRect, true);
+      window.removeEventListener('resize', debouncedUpdateRect);
+      window.removeEventListener('scroll', debouncedUpdateRect, true);
     };
-  }, [updateRect]);
+  }, [updateRect, debouncedUpdateRect]);
 
   // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') {
-        if (currentStep < steps.length - 1) onStepChange(currentStep + 1);
+        if (steps && currentStep < steps.length - 1) onStepChange(currentStep + 1);
       } else if (e.key === 'ArrowLeft') {
         if (currentStep > 0) onStepChange(currentStep - 1);
       } else if (e.key === 'Escape') {
@@ -67,21 +84,44 @@ export const GuidedTour = ({ steps, isOpen, onClose, currentStep, onStepChange }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, currentStep, steps.length, onStepChange, onClose]);
+  }, [isOpen, currentStep, steps, onStepChange, onClose]);
 
   if (!isOpen) return null;
+  if (!steps || steps.length === 0) return null;
 
   const step = steps[currentStep];
+  if (!step) return null;
+
   const isLastStep = currentStep === steps.length - 1;
 
   // Calculate tooltip position based on placement prop or fallback
   const tooltipStyle: CSSProperties = { position: 'absolute' };
+  const TOOLTIP_ESTIMATED_HEIGHT = 300; // Approximate max height of the tooltip
+  const TOOLTIP_ESTIMATED_WIDTH = 340;  // Approximate max width
 
   if (targetRect && step.targetId) {
-    const placement = step.placement || 'bottom';
+    let placement = step.placement || 'bottom';
     const padding = 16;
 
-    // Default fallback if placement calculation fails or is off-screen could be added here
+    // Boundary check logic
+    if (placement === 'bottom') {
+        if (targetRect.bottom + padding + TOOLTIP_ESTIMATED_HEIGHT > window.innerHeight) {
+             placement = 'top';
+        }
+    } else if (placement === 'top') {
+        if (targetRect.top - padding - TOOLTIP_ESTIMATED_HEIGHT < 0) {
+            placement = 'bottom';
+        }
+    } else if (placement === 'right') {
+        if (targetRect.right + padding + TOOLTIP_ESTIMATED_WIDTH > window.innerWidth) {
+            placement = 'left';
+        }
+    } else if (placement === 'left') {
+        if (targetRect.left - padding - TOOLTIP_ESTIMATED_WIDTH < 0) {
+            placement = 'right';
+        }
+    }
+
     if (placement === 'bottom') {
         tooltipStyle.top = targetRect.bottom + padding;
         tooltipStyle.left = targetRect.left + (targetRect.width / 2);
