@@ -46,25 +46,29 @@ function App() {
         title: "Your Spiritual Passport",
         content: "Login to track your visited temples and sync your pilgrimage progress across all your devices.",
         targetId: "tour-login",
-        placement: "bottom"
+        placement: "bottom",
+        requiredView: 'list'
       },
       {
         title: "Find Any Temple",
         content: "Search for Divya Desams by name, deity, or location. Try typing 'Tirupati' or 'Srirangam'.",
         targetId: "tour-search",
-        placement: "bottom"
+        placement: "bottom",
+        requiredView: 'list'
       },
       {
         title: "Track Your Journey",
         content: "Monitor your pilgrimage progress here. See how many of the 108 Divya Desams you have visited.",
         targetId: "tour-list-stats",
-        placement: "bottom"
+        placement: "bottom",
+        requiredView: 'list'
       },
       {
         title: "Interactive Map",
         content: "Explore the geographical locations of all temples. Click on any marker to view detailed information.",
         targetId: "tour-map",
-        placement: "center"
+        placement: "center",
+        requiredView: 'map'
       }
     ];
 
@@ -73,7 +77,8 @@ function App() {
             title: "Switch Views",
             content: "Toggle between the List view and Map view on mobile devices for a seamless experience.",
             targetId: "tour-mobile-toggle",
-            placement: "top"
+            placement: "top",
+            requiredView: 'map'
         });
     }
 
@@ -82,14 +87,10 @@ function App() {
 
   const handleTourStepChange = (step: number) => {
     setTourStep(step);
-    const targetId = tourSteps[step]?.targetId;
+    const nextStep = tourSteps[step];
 
-    if (isMobile) {
-        if (targetId === 'tour-map') {
-            setViewMode('map');
-        } else if (targetId === 'tour-search' || targetId === 'tour-login' || targetId === 'tour-list-stats') {
-            setViewMode('list');
-        }
+    if (isMobile && nextStep?.requiredView) {
+        setViewMode(nextStep.requiredView);
     }
   };
 
