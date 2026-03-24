@@ -118,6 +118,11 @@ function App() {
     setIsModalOpen(true);
   }, []);
 
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedId(null);
+  }, []);
+
   return (
     <div className="flex h-[100dvh] w-full bg-slate-50 overflow-hidden relative font-sans selection:bg-brand-200 selection:text-brand-900">
       <AnimatePresence>
@@ -125,7 +130,7 @@ function App() {
             <ImmersiveLocationModal
             key="modal"
             location={locations.find(l => l.id === selectedId) || null}
-            onClose={() => setIsModalOpen(false)}
+            onClose={handleModalClose}
             onSelect={handleMapSelect}
             allLocations={locations}
             />

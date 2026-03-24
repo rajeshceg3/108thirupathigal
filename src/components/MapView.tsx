@@ -70,11 +70,24 @@ interface MapViewProps {
   onSelect: (id: number) => void;
 }
 
+const DEFAULT_CENTER: [number, number] = [11, 79];
+const DEFAULT_ZOOM = 7;
+
 const MapUpdater = ({ center }: { center: [number, number] | null }) => {
   const map = useMap();
   useEffect(() => {
-    // If center is null or [0,0] (celestial), don't fly
-    if (center && (center[0] !== 0 || center[1] !== 0)) {
+    // If center is null, reset to default map view.
+    if (!center) {
+      map.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, {
+        animate: true,
+        duration: 1.8,
+        easeLinearity: 0.1
+      });
+      return;
+    }
+
+    // If center is [0,0] (celestial), don't fly.
+    if (center[0] !== 0 || center[1] !== 0) {
       map.flyTo(center, 14, { // Optimal zoom for context
         animate: true,
         duration: 2.5, // Slower, more cinematic pan
@@ -94,8 +107,8 @@ export const MapView = ({ locations, selectedId, onSelect }: MapViewProps) => {
   return (
     <div className="w-full h-full relative z-0 bg-slate-100">
       <MapContainer
-        center={[11, 79]}
-        zoom={7}
+        center={DEFAULT_CENTER}
+        zoom={DEFAULT_ZOOM}
         className="w-full h-full outline-none"
         zoomControl={false}
       >
