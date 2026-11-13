@@ -18,7 +18,17 @@ vi.mock('react-leaflet', () => ({
   TileLayer: () => <div>TileLayer</div>,
   Marker: ({ children }: PropsWithChildren) => <div>{children}</div>,
   Popup: ({ children }: PropsWithChildren) => <div>{children}</div>,
-  useMap: () => ({ flyTo: vi.fn() })
+  useMap: () => ({
+    flyTo: vi.fn(),
+    addLayer: vi.fn(),
+    removeLayer: vi.fn(),
+    attributionControl: { addAttribution: vi.fn() }
+  })
+}))
+
+// Mock the MapLibre GL Leaflet bridge (warm paper basemap layer)
+vi.mock('@maplibre/maplibre-gl-leaflet', () => ({
+  maplibreGL: vi.fn(() => ({ addTo: vi.fn() }))
 }))
 
 describe('App', () => {
