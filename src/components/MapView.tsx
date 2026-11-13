@@ -1,7 +1,10 @@
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import { MapContainer, Marker, useMap } from 'react-leaflet';
 import { Location } from '../data/locations';
 import 'leaflet/dist/leaflet.css';
 import { useEffect } from 'react';
+import { maplibreGL } from '@maplibre/maplibre-gl-leaflet';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import warmMapStyle from '../vendor/warm-map/style.json';
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MapPin } from 'lucide-react';
@@ -98,6 +101,21 @@ const MapUpdater = ({ center }: { center: [number, number] | null }) => {
   return null;
 };
 
+// Warm paper basemap (worlds shared module): OpenFreeMap vector tiles,
+// custom watercolor-wash style. Free public instance, no API key.
+const WarmPaperBasemap = () => {
+  const map = useMap();
+  useEffect(() => {
+    const layer = maplibreGL({ style: warmMapStyle as any });
+    layer.addTo(map);
+    map.attributionControl.addAttribution('<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>');
+    return () => {
+      map.removeLayer(layer);
+    };
+  }, [map]);
+  return null;
+};
+
 export const MapView = ({ locations, selectedId, onSelect }: MapViewProps) => {
   const selectedLocation = locations.find(l => l.id === selectedId);
   const center: [number, number] | null = selectedLocation
@@ -112,11 +130,7 @@ export const MapView = ({ locations, selectedId, onSelect }: MapViewProps) => {
         className="w-full h-full outline-none"
         zoomControl={false}
       >
-        <TileLayer
-            // Clean, high-contrast Voyager style
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-        />
+        <WarmPaperBasemap />
         {locations.map(loc => {
             const isSelected = selectedId === loc.id;
             return (
