@@ -67,8 +67,8 @@ const createCustomIcon = (isSelected: boolean) => {
   return L.divIcon({
     className: 'custom-marker-icon', // Empty class to avoid default styles
     html: renderToStaticMarkup(<CustomMarkerIcon isSelected={isSelected} />),
-    iconSize: [40, 50],
-    iconAnchor: [20, 50], // Anchor at bottom center
+    iconSize: [44, 50],
+    iconAnchor: [22, 50], // Anchor at bottom center
     popupAnchor: [0, -50],
   });
 };

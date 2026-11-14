@@ -180,8 +180,8 @@ function App() {
             <div className="relative">
                 <div className="w-1.5 h-8 bg-gradient-to-b from-brand-500 to-brand-400 rounded-full shadow-[0_0_15px_rgba(139,92,246,0.5)]"></div>
                 <motion.div
-                    animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.2, 1] }}
-                    transition={{ duration: 3, repeat: Infinity }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0 }}
                     className="absolute -top-1 -left-1 w-3.5 h-10 bg-brand-400/20 blur-md rounded-full"
                 />
             </div>
