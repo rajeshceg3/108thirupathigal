@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Location } from '../data/locations';
 import { X, MapPin, Share2, Navigation, Star } from 'lucide-react';
@@ -31,6 +31,13 @@ const deg2rad = (deg: number) => {
 
 export const ImmersiveLocationModal = ({ location, onClose, onSelect, allLocations }: ImmersiveLocationModalProps) => {
 
+  const dialogRef=useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const previous=document.activeElement as HTMLElement|null;
+    dialogRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    return()=>{if(previous?.isConnected)previous.focus();};
+  },[]);
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -41,6 +48,7 @@ export const ImmersiveLocationModal = ({ location, onClose, onSelect, allLocatio
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
+      if(e.key==='Tab'){const items=Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button,a[href],[tabindex="0"]')||[]).filter(el=>el.offsetParent!==null);const first=items[0],last=items[items.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
@@ -94,12 +102,13 @@ export const ImmersiveLocationModal = ({ location, onClose, onSelect, allLocatio
 
        {/* Modal Container */}
        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          ref={dialogRef} role="dialog" aria-modal="true" aria-label={location.name}
+          initial={false}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: "spring", stiffness: 350, damping: 30 }}
           className={`
-             relative w-full h-full md:h-[95vh] md:w-[95vw] md:max-w-none md:rounded-3xl
+             temple-detail relative w-full h-full md:h-[95vh] md:w-[95vw] md:max-w-none md:rounded-3xl
              bg-white shadow-2xl overflow-hidden flex flex-col md:flex-row
           `}
        >
@@ -239,6 +248,8 @@ export const ImmersiveLocationModal = ({ location, onClose, onSelect, allLocatio
                                     whileHover={{ scale: 1.02, backgroundColor: '#f8fafc' }}
                                     key={loc.id}
                                     className="flex items-center gap-4 p-3 rounded-2xl bg-white transition-colors border border-slate-100 group cursor-pointer shadow-sm"
+                                    role="button" tabIndex={0} aria-label={`View ${loc.name}`}
+                                    onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onSelect(loc.id);}}}
                                     onClick={() => onSelect(loc.id)}
                                  >
                                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 relative">

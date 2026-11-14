@@ -1,4 +1,7 @@
-import { MapContainer, Marker, useMap } from 'react-leaflet';
+import { setWorkerUrl, type StyleSpecification } from 'maplibre-gl';
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+setWorkerUrl(workerUrl);
+import { MapContainer, useMap } from 'react-leaflet';
 import { Location } from '../data/locations';
 import 'leaflet/dist/leaflet.css';
 import { useEffect } from 'react';
@@ -6,6 +9,9 @@ import { maplibreGL } from '@maplibre/maplibre-gl-leaflet';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import warmMapStyle from '../vendor/warm-map/style.json';
 import L from 'leaflet';
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MapPin } from 'lucide-react';
 
@@ -82,7 +88,7 @@ const MapUpdater = ({ center }: { center: [number, number] | null }) => {
     // If center is null, reset to default map view.
     if (!center) {
       map.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, {
-        animate: true,
+        animate: false,
         duration: 1.8,
         easeLinearity: 0.1
       });
@@ -92,7 +98,7 @@ const MapUpdater = ({ center }: { center: [number, number] | null }) => {
     // If center is [0,0] (celestial), don't fly.
     if (center[0] !== 0 || center[1] !== 0) {
       map.flyTo(center, 14, { // Optimal zoom for context
-        animate: true,
+        animate: false,
         duration: 2.5, // Slower, more cinematic pan
         easeLinearity: 0.1
       });
@@ -106,14 +112,28 @@ const MapUpdater = ({ center }: { center: [number, number] | null }) => {
 const WarmPaperBasemap = () => {
   const map = useMap();
   useEffect(() => {
-    const layer = maplibreGL({ style: warmMapStyle as any });
+    const control=(event:Event)=>{const action=(event as CustomEvent).detail;if(action==='in')map.zoomIn(1,{animate:false});if(action==='out')map.zoomOut(1,{animate:false});if(action==='reset')map.setView(DEFAULT_CENTER,DEFAULT_ZOOM,{animate:false});};
+    window.addEventListener('journey-map-control',control);
+    const layer = maplibreGL({ style: warmMapStyle as StyleSpecification });
     layer.addTo(map);
+    (map.getContainer() as HTMLElement & {_warmMap?: unknown})._warmMap = layer.getMaplibreMap?.();
     map.attributionControl.addAttribution('<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>');
     return () => {
+      window.removeEventListener('journey-map-control',control);
       map.removeLayer(layer);
     };
   }, [map]);
   return null;
+};
+
+const TempleMarkers = ({locations,selectedId,onSelect}:MapViewProps) => {
+ const map=useMap();
+ useEffect(()=>{
+  const cluster=L.markerClusterGroup({animate:false,showCoverageOnHover:false,spiderfyOnMaxZoom:true,maxClusterRadius:42,iconCreateFunction:group=>L.divIcon({className:'temple-cluster',html:`<span>${group.getChildCount()}</span>`,iconSize:[44,44]})});
+  locations.filter(loc=>loc.lat!==0||loc.lng!==0).forEach(loc=>{const marker=L.marker([loc.lat,loc.lng],{icon:createCustomIcon(loc.id===selectedId),title:loc.name,alt:loc.name});marker.on('click',()=>onSelect(loc.id));cluster.addLayer(marker);});
+  map.addLayer(cluster);return()=>{map.removeLayer(cluster);};
+ },[locations,selectedId,onSelect,map]);
+ return null;
 };
 
 export const MapView = ({ locations, selectedId, onSelect }: MapViewProps) => {
@@ -129,22 +149,10 @@ export const MapView = ({ locations, selectedId, onSelect }: MapViewProps) => {
         zoom={DEFAULT_ZOOM}
         className="w-full h-full outline-none"
         zoomControl={false}
+        maxZoom={18} zoomAnimation={false} fadeAnimation={false} markerZoomAnimation={false}
       >
         <WarmPaperBasemap />
-        {locations.map(loc => {
-            const isSelected = selectedId === loc.id;
-            return (
-              <Marker
-                key={loc.id}
-                position={[loc.lat, loc.lng]}
-                icon={createCustomIcon(isSelected)}
-                eventHandlers={{
-                  click: () => onSelect(loc.id),
-                }}
-                zIndexOffset={isSelected ? 1000 : 0}
-              />
-            );
-        })}
+        <TempleMarkers locations={locations} selectedId={selectedId} onSelect={onSelect}/>
         <MapUpdater center={center} />
       </MapContainer>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { locations } from './data/locations';
 import { LocationCard } from './components/LocationCard';
 import { SearchBar } from './components/SearchBar';
@@ -7,13 +7,15 @@ import { ImmersiveLocationModal } from './components/ImmersiveLocationModal';
 import { Login } from './components/Login';
 import { GuidedTour, TourStep } from './components/GuidedTour';
 import { useVisitedLocations } from './hooks/useVisitedLocations';
-import { Map as MapIcon, List as ListIcon, Search, Sparkles, HelpCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { List as ListIcon, Search, HelpCircle, X } from 'lucide-react';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 
 function App() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const panelRef = useRef<HTMLDivElement>(null);
+  const exploreRef = useRef<HTMLButtonElement>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('map');
   const { visitedIds, toggleVisited, session } = useVisitedLocations();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -21,6 +23,22 @@ function App() {
   // Tour State
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [tourStep, setTourStep] = useState(0);
+
+  useEffect(() => {
+    if(viewMode !== 'list'){if(!isModalOpen)exploreRef.current?.focus();return;}
+    const panel=panelRef.current;
+    panel?.querySelector<HTMLButtonElement>('button')?.focus();
+    const handleKey=(event:KeyboardEvent)=>{
+      if(event.key==='Escape'){setViewMode('map');exploreRef.current?.focus();}
+      if(event.key==='Tab'&&panel){
+        const items=Array.from(panel.querySelectorAll<HTMLElement>('button:not([disabled]),input,a[href],[tabindex="0"]')).filter(el=>el.offsetParent!==null);
+        const first=items[0],last=items[items.length-1];
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+        if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+      }
+    };
+    window.addEventListener('keydown',handleKey);return()=>window.removeEventListener('keydown',handleKey);
+  },[viewMode,isModalOpen]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -102,16 +120,11 @@ function App() {
 
   const handleSelect = useCallback((id: number) => {
     setSelectedId(id);
-    // Auto-open modal for Celestial locations (since they have no map marker to click)
-    const loc = locations.find(l => l.id === id);
-    if (loc && loc.lat === 0 && loc.lng === 0) {
-      setIsModalOpen(true);
-    }
+    setIsModalOpen(true);
 
-    if (isMobile) {
-      setViewMode('map');
-    }
-  }, [isMobile]);
+    setViewMode('map');
+    exploreRef.current?.focus();
+  }, []);
 
   const handleMapSelect = useCallback((id: number) => {
     setSelectedId(id);
@@ -121,10 +134,11 @@ function App() {
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
     setSelectedId(null);
+    exploreRef.current?.focus();
   }, []);
 
   return (
-    <div className="flex h-[100dvh] w-full bg-slate-50 overflow-hidden relative font-sans selection:bg-brand-200 selection:text-brand-900">
+    <MotionConfig reducedMotion="always" transition={{duration:0}}><div className="flex h-[100dvh] w-full bg-slate-50 overflow-hidden relative font-sans selection:bg-brand-200 selection:text-brand-900">
       <AnimatePresence>
         {isModalOpen && (
             <ImmersiveLocationModal
@@ -148,14 +162,18 @@ function App() {
       {/* Sidebar */}
       <motion.div
         initial={false}
-        animate={{ x: isMobile && viewMode === 'map' ? '-100%' : '0%' }}
+        ref={panelRef}
+        role="dialog" aria-label="Explore temples" aria-modal="true"
+        hidden={viewMode !== 'list'}
+        animate={{ x: '0%' }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={`
-            absolute inset-0 z-30 md:static md:z-0
-            flex flex-col w-full md:w-[420px] lg:w-[460px]
+            journey-panel absolute inset-0 z-[1500]
+            flex flex-col w-full
             bg-white/80 backdrop-blur-xl border-r border-slate-200/50 shadow-2xl md:shadow-xl
         `}
       >
+        <button className="panel-close" aria-label="Close Explore" onClick={()=>{setViewMode('map');exploreRef.current?.focus();}}><X size={20}/></button>
         {/* Header */}
         <div className="px-6 py-6 border-b border-slate-100/50 bg-white/50 backdrop-blur-md z-10 sticky top-0" id="tour-header">
           <div className="flex items-center gap-4 mb-6">
@@ -171,9 +189,7 @@ function App() {
                  <h1 className="text-xl font-extrabold text-slate-900 tracking-tightest leading-none flex items-center gap-2">
                     108 Thirupathigal
                  </h1>
-                 <p className="text-[13px] font-medium text-slate-500 mt-1 tracking-wide flex items-center gap-1">
-                    <Sparkles size={10} className="text-brand-400" /> Divya Desam Pilgrimage
-                 </p>
+
             </div>
             <button
                 onClick={startTour}
@@ -187,6 +203,7 @@ function App() {
           <div className="mb-5" id="tour-login">
             <Login />
           </div>
+          <div className="journey-tools">{(['in','out','reset'] as const).map((action,index)=><button key={action} aria-label={['Zoom in','Zoom out','Reset map'][index]} onClick={()=>window.dispatchEvent(new CustomEvent('journey-map-control',{detail:action}))}>{['+','−','Reset map'][index]}</button>)}</div>
           <SearchBar
             id="tour-search"
             value={searchTerm}
@@ -253,45 +270,10 @@ function App() {
           onSelect={handleMapSelect}
         />
 
-        {/* Mobile View Toggle - Refined Floating Pill */}
-        <div
-            id="tour-mobile-toggle"
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[1000] md:hidden w-auto perspective-1000"
-        >
-          <motion.div
-             initial={{ y: 50, opacity: 0 }}
-             animate={{ y: 0, opacity: 1 }}
-             transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-             className="bg-slate-900/90 backdrop-blur-xl p-1.5 rounded-full shadow-float flex items-center gap-1 border border-white/10 ring-1 ring-black/20"
-          >
-            <button
-              onClick={() => setViewMode('list')}
-              className={`
-                flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold transition-all duration-300 ease-bounce-subtle
-                ${viewMode === 'list'
-                  ? 'bg-white text-slate-900 shadow-lg scale-100'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5 scale-95'}
-              `}
-            >
-              <ListIcon size={16} strokeWidth={2.5} />
-              List
-            </button>
-            <button
-              onClick={() => setViewMode('map')}
-              className={`
-                flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold transition-all duration-300 ease-bounce-subtle
-                ${viewMode === 'map'
-                  ? 'bg-white text-slate-900 shadow-lg scale-100'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5 scale-95'}
-              `}
-            >
-              <MapIcon size={16} strokeWidth={2.5} />
-              Map
-            </button>
-          </motion.div>
-        </div>
+        {viewMode === 'map' && <button ref={exploreRef} className="explore-action" onClick={()=>setViewMode('list')} aria-label="Explore temples"><ListIcon size={18}/> Explore</button>}
+
       </div>
-    </div>
+    </div></MotionConfig>
   );
 }
 

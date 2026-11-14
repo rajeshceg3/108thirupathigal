@@ -20,6 +20,7 @@ vi.mock('react-leaflet', () => ({
   Popup: ({ children }: PropsWithChildren) => <div>{children}</div>,
   useMap: () => ({
     flyTo: vi.fn(),
+    getContainer: () => document.createElement('div'),
     addLayer: vi.fn(),
     removeLayer: vi.fn(),
     attributionControl: { addAttribution: vi.fn() }
